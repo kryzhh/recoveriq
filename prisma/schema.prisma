@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Event {
+  id              String   @id @default(uuid())
+  razorpayId      String   @unique  // payment_id or order_id
+  type            String   // PAYMENT_FAILED, ORDER_ABANDONED, MANDATE_FAILED
+  status          String   // PENDING, IN_PROGRESS, RECOVERED, UNRECOVERABLE
+  amount          Int      // in paise
+  currency        String   @default("INR")
+  errorCode       String?  // Razorpay decline code
+  rootCause       String?  // AI-diagnosed cause
+  rawPayload      Json     // full webhook/API payload
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  interventions   Intervention[]
+}
+
+model Intervention {
+  id            String   @id @default(uuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id])
+  type          String   // PAYMENT_LINK, RETRY, DUNNING_MESSAGE, ESCALATE
+  reasoning     String   // LLM's explanation — this is your audit trail
+  status        String   // PENDING, EXECUTED, FAILED, SKIPPED
+  retryCount    Int      @default(0)
+  executedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  outcome       Outcome?
+  auditLogs     AuditLog[]
+}
+
+model Outcome {
+  id               String   @id @default(uuid())
+  interventionId   String   @unique
+  intervention     Intervention @relation(fields: [interventionId], references: [id])
+  recovered        Boolean
+  amountRecovered  Int?     // in paise
+  recoveryLatencyMs Int?
+  resolvedAt       DateTime @default(now())
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  interventionId String
+  intervention   Intervention @relation(fields: [interventionId], references: [id])
+  action         String   // what was about to happen
+  result         String   // what actually happened
+  metadata       Json?
+  timestamp      DateTime @default(now())
+}
+
+model StoppingRule {
+  id          String  @id @default(uuid())
+  eventId     String  @unique
+  optedOut    Boolean @default(false)
+  retryCount  Int     @default(0)
+  lastAttempt DateTime?
+  cooldownUntil DateTime?
+}

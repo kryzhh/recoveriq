@@ -1,5 +1,6 @@
 import { prisma } from '../db/client.js'
 import { decideIntervention } from './decisionEngine.js'
+import { executeIntervention } from './executor.js'
 
 export async function runIntervention(event) {
   // 1. get or create stopping rule
@@ -80,5 +81,18 @@ export async function runIntervention(event) {
     data: { status: 'IN_PROGRESS' }
   })
 
-  return { intervention, decision }
+  const executionResult = await executeIntervention(intervention, event)
+
+  return { intervention, decision, executionResult }
+}
+
+export async function writeAuditOutcome(interventionId, result, metadata = {}) {
+  await prisma.auditLog.create({
+    data: {
+      interventionId,
+      action: 'EXECUTION_COMPLETE',
+      result,  // 'SUCCESS' | 'FAILED' | 'SKIPPED' | 'REVERSED'
+      metadata,
+    }
+  })
 }

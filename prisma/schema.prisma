@@ -10,7 +10,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Event {
@@ -42,6 +41,10 @@ model Intervention {
 
   outcome       Outcome?
   auditLogs     AuditLog[]
+  
+  executionPayload  Json?   // what Razorpay returned when we executed
+  reversalPayload   Json?   // what to call to undo this (populated after execution)
+
 }
 
 model Outcome {

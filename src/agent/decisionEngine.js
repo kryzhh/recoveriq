@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { logger } from '../utils/logger.js'
 
 const SYSTEM_PROMPT = `You are RecoverIQ, a revenue recovery agent for a Razorpay merchant.
 
@@ -23,7 +24,32 @@ Respond ONLY in this exact JSON format. Do not think out loud. Do not explain. D
   "intervention": "PAYMENT_LINK" | "RETRY" | "DUNNING_MESSAGE" | "ESCALATE",
   "reasoning": "one clear sentence explaining why this intervention was chosen",
   "confidence": "HIGH" | "MEDIUM" | "LOW"
-}`
+}
+You must output ONLY the JSON object. No thinking. No analysis. No explanation. Start your response with { and end with }. Any response not starting with { will be rejected.  
+`
+
+const MODELS = ['nvidia/nemotron-3-ultra-550b-a55b:free', 'stealth/ox-alpha',]
+
+async function callLLM(model, userMessage) {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'http://localhost:3000',
+      'X-Title': 'RecoverIQ',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 256,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userMessage }
+      ],
+    }),
+  })
+  return response.json()
+}
 
 export async function decideIntervention(event, stoppingRule) {
   const userMessage = `
@@ -44,28 +70,16 @@ Raw Description: ${
   }
 `.trim()
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-            'HTTP-Referer': 'http://localhost:3000',
-            'X-Title': 'RecoverIQ',
-        },
-        body: JSON.stringify({
-            model: 'nvidia/nemotron-3-ultra-550b-a55b:free', // fast + cheap, good for structured JSON output
-            max_tokens: 256,
-            messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: userMessage }
-            ],
-        }),
-    })
+  let data
+    for (const model of MODELS) {
+      data = await callLLM(model, userMessage)
+      if (data.choices?.[0]?.message?.content) break
+      logger.warn(`[DecisionEngine] Model ${model} failed, trying next...`)
+    }
 
-const data = await response.json()
-const text = data.choices?.[0]?.message?.content
+  const text = data.choices?.[0]?.message?.content
+  if (!text) throw new Error(`All models failed: ${JSON.stringify(data)}`)
 
-  if (!text) throw new Error(`LLM returned no content: ${JSON.stringify(data)}`)
 
   try {
     console.log('[DecisionEngine] Raw LLM response:', text)

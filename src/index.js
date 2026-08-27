@@ -7,6 +7,8 @@ import { runIntervention } from './agent/interventionRunner.js'
 import { prisma } from './db/client.js'
 import { logger } from './utils/logger.js'
 import { startOutcomeTracker } from './agent/outcomeTracker.js'
+import getMetrics from './routes/metrics.js'
+import dashboardRouter from './routes/dashboard.js'
 
 const app = express()
 app.use(express.json())
@@ -14,7 +16,9 @@ app.use(morgan('[:date[iso]] :method :url :status :response-time ms'))
 
 app.post('/webhook/razorpay', handleWebhook)
 
+app.use('/dashboard', dashboardRouter)
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
+app.get('/metrics', getMetrics)
 
 // trigger agent on a single event — for testing
 app.post('/agent/run/:eventId', async (req, res) => {

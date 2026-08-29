@@ -10,7 +10,7 @@ function asCountMap(rows, keyField, keys) {
   for (const row of rows) {
     const key = row[keyField]
     if (key in map) {
-      map[key] = row._count[keyField]
+      map[key] = row._count[keyField]  // was row._count._all
     }
   }
 
@@ -35,17 +35,17 @@ export async function loadMetricsData() {
     prisma.event.groupBy({
       by: ['type'],
       where: { type: { in: EVENT_TYPES } },
-      _count: { _all: true },
+      _count: { type: true },
     }),
     prisma.event.groupBy({
       by: ['status'],
       where: { status: { in: EVENT_STATUSES } },
-      _count: { _all: true },
+      _count: { status: true },
     }),
     prisma.intervention.groupBy({
       by: ['type'],
       where: { type: { in: INTERVENTION_TYPES } },
-      _count: { _all: true },
+      _count: { type: true },
     }),
     prisma.event.aggregate({
       _sum: { amount: true },
@@ -88,7 +88,7 @@ export async function loadMetricsData() {
     : 0
 
   const totalAmountAtRiskPaise = eventAmountAggregate._sum.amount ?? 0
-  const totalAmountRecoveredPaise = recoveredAmountAggregate._sum.amountRecovered ?? 0
+  const totalAmountRecoveredPaise = Number(recoveredAmountAggregate._sum.amountRecovered ?? 0)
   const avgRecoveryLatencyMs = recoveryLatencyAggregate._avg.recoveryLatencyMs ?? 0
 
   const topRootCauses = topRootCauseRows.map((row) => ({

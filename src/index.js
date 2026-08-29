@@ -1,3 +1,8 @@
+// Need this else conversion of big int to JSON will break the server
+BigInt.prototype.toJSON = function() {
+  return this.toString()
+}
+
 import express from 'express'
 import morgan from 'morgan'
 import { handleWebhook } from './routes/webhook.js'
@@ -60,6 +65,41 @@ app.post('/agent/run-batch', async (req, res) => {
     failed: results.filter(r => r.status === 'error').length,
     results,
   })
+})
+
+app.post('/agent/run-batch-stream', async (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+
+  const events = await prisma.event.findMany({
+    where: { status: 'PENDING' },
+    take: req.body.limit || 10,
+  })
+
+  logger.info(`[BatchStream] Running agent on ${events.length} events`)
+
+  const results = []
+  for (const event of events) {
+    try {
+      const result = await runIntervention(event)
+      const payload = { eventId: event.id, status: 'ok', result }
+      results.push(payload)
+      res.write(`data: ${JSON.stringify(payload)}\n\n`)
+    } catch (err) {
+      const payload = { eventId: event.id, status: 'error', error: err.message }
+      results.push(payload)
+      res.write(`data: ${JSON.stringify(payload)}\n\n`)
+      logger.error(`[BatchStream] Failed for event ${event.id}`, { error: err.message })
+    }
+  }
+
+  const processed = results.length
+  const succeeded = results.filter(r => r.status === 'ok').length
+  const failed = results.filter(r => r.status === 'error').length
+
+  res.write(`data: ${JSON.stringify({ done: true, processed, succeeded, failed })}\n\n`)
+  res.end()
 })
 
 app.listen(3000, async () => {

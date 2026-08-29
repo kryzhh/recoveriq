@@ -48,7 +48,12 @@ async function checkIntervention(intervention) {
   }
 
   const { amountRecovered, recoveryLatencyMs } = getRecoveryDetails(intervention, entity)
-
+  console.log('[OutcomeTracker] entity fields:', {
+    amount: entity.amount,
+    amountPaid: entity.amount_paid,
+    id: entity.id,
+    status: entity.status,
+  })
   await prisma.outcome.update({
     where: { id: outcome.id },
     data: {
@@ -77,6 +82,9 @@ export async function trackOutcomes() {
   const interventions = await prisma.intervention.findMany({
     where: {
       status: 'EXECUTED',
+      type: {
+        not: 'ESCALATE',
+      },
       outcome: {
         is: {
           recovered: false,

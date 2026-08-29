@@ -83,6 +83,7 @@ export async function runIntervention(event) {
 
   const executionResult = await executeIntervention(intervention, event)
 
+  await new Promise(resolve => setTimeout(resolve, 3000))
   return { intervention, decision, executionResult }
 }
 

@@ -8,28 +8,67 @@ function formatCount(value: number | undefined) {
   return (value ?? 0).toLocaleString('en-IN')
 }
 
-function LoadingSpinner() {
+function LoadingSkeleton() {
   return (
-    <div className="flex min-h-full items-center justify-center bg-[#0a0f1a] p-8 text-slate-200">
-      <div className="flex items-center gap-3 rounded-full border border-[#1a2540] bg-[#0d1424] px-4 py-3 text-sm text-slate-300">
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-sky-300" />
-        Loading metrics
+    <div className="min-h-full bg-[#0a0f1a] p-8 text-slate-100">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8">
+        <section className="flex flex-col gap-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-3">
+              <div className="h-10 w-72 rounded-2xl bg-[#1a2540] animate-pulse" />
+              <div className="h-4 w-[28rem] rounded-2xl bg-[#1a2540] animate-pulse" />
+            </div>
+            <div className="h-8 w-24 rounded-full bg-[#1a2540] animate-pulse" />
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="rounded-2xl border border-[#1a2540] bg-[#0d1424] p-5">
+              <div className="h-4 w-24 rounded-2xl bg-[#1a2540] animate-pulse" />
+              <div className="mt-3 h-8 w-32 rounded-2xl bg-[#1a2540] animate-pulse" />
+            </div>
+          ))}
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div key={index} className="rounded-2xl border border-[#1a2540] bg-[#0d1424] p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="h-5 w-44 rounded-2xl bg-[#1a2540] animate-pulse" />
+                <div className="h-4 w-24 rounded-2xl bg-[#1a2540] animate-pulse" />
+              </div>
+              <div className="space-y-4">
+                <div className="h-12 rounded-xl bg-[#1a2540] animate-pulse" />
+                <div className="h-12 rounded-xl bg-[#1a2540] animate-pulse" />
+                <div className="h-12 rounded-xl bg-[#1a2540] animate-pulse" />
+                <div className="h-12 rounded-xl bg-[#1a2540] animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <section>
+          <div className="rounded-2xl border border-[#1a2540] bg-[#0d1424] p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="h-5 w-40 rounded-2xl bg-[#1a2540] animate-pulse" />
+              <div className="h-4 w-28 rounded-2xl bg-[#1a2540] animate-pulse" />
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-10 w-40 rounded-full bg-[#1a2540] animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )
 }
 
-function Panel({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: 'easeOut', delay }}
-      className="rounded-2xl border border-[#1a2540] bg-[#0d1424] p-5"
-    >
-      {children}
-    </motion.div>
-  )
+function Panel({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-2xl border border-[#1a2540] bg-[#0d1424] p-5">{children}</div>
 }
 
 export default function Dashboard() {
@@ -61,7 +100,7 @@ export default function Dashboard() {
   }, [])
 
   if (loading || !metrics) {
-    return <LoadingSpinner />
+    return <LoadingSkeleton />
   }
 
   const totalEvents = Object.values(metrics.statusBreakdown).reduce((sum, value) => sum + value, 0)
@@ -109,26 +148,26 @@ export default function Dashboard() {
         </section>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Panel delay={cardDelays[0]}>
+          <Panel>
             <div className="text-sm text-slate-400">Total Events</div>
             <div className="mt-3 text-3xl font-semibold text-slate-50">{formatCount(totalEvents)}</div>
           </Panel>
 
-          <Panel delay={cardDelays[1]}>
+          <Panel>
             <div className="text-sm text-slate-400">Amount at Risk</div>
             <div className="mt-3 text-3xl font-semibold text-slate-50">
               ₹{metrics.totalAmountAtRisk.rupees.toLocaleString('en-IN')}
             </div>
           </Panel>
 
-          <Panel delay={cardDelays[2]}>
+          <Panel>
             <div className="text-sm text-slate-400">Amount Recovered</div>
             <div className="mt-3 text-3xl font-semibold text-emerald-400">
               ₹{metrics.totalAmountRecovered.rupees.toLocaleString('en-IN')}
             </div>
           </Panel>
 
-          <Panel delay={cardDelays[3]}>
+          <Panel>
             <div className="text-sm text-slate-400">Recovery Rate</div>
             <div className={`mt-3 text-3xl font-semibold ${recoveryRateColor}`}>
               {metrics.recoveryRate}%
@@ -214,16 +253,10 @@ export default function Dashboard() {
 
             <div className="flex flex-wrap gap-3">
               {['PENDING', 'IN_PROGRESS', 'RECOVERED', 'UNRECOVERABLE'].map((status) => (
-                <motion.div
-                  key={status}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium ${statusChipColors[status]}`}
-                >
+                <div key={status} className={`rounded-full border px-4 py-2 text-sm font-medium ${statusChipColors[status]}`}>
                   <span className="mr-2 text-slate-400">{status}</span>
                   <span>{formatCount(metrics.statusBreakdown[status])}</span>
-                </motion.div>
+                </div>
               ))}
             </div>
           </Panel>

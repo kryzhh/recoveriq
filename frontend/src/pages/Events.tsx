@@ -53,6 +53,8 @@ export default function Events() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [typeFilter, setTypeFilter] = useState('ALL')
+  const [sortField, setSortField] = useState<string>('createdAt')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => {
     let active = true
@@ -148,53 +150,160 @@ export default function Events() {
         <section className="overflow-hidden rounded-2xl border border-[#1a2540] bg-[#0d1424]">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-[#1a2540] text-left">
-                <th className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400">Type</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400">Amount</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400">Root Cause</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400">Status</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400">Error Code</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400">Interventions</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400">Created At</th>
-              </tr>
+                  <tr className="border-b border-[#1a2540] text-left">
+                    <th
+                      onClick={() => {
+                        if (sortField === 'type') setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        else {
+                          setSortField('type')
+                          setSortDirection('asc')
+                        }
+                      }}
+                      className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400 cursor-pointer select-none"
+                    >
+                      Type {sortField === 'type' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
+                    <th
+                      onClick={() => {
+                        if (sortField === 'amount') setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        else {
+                          setSortField('amount')
+                          setSortDirection('asc')
+                        }
+                      }}
+                      className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400 cursor-pointer select-none"
+                    >
+                      Amount {sortField === 'amount' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
+                    <th
+                      onClick={() => {
+                        if (sortField === 'rootCause') setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        else {
+                          setSortField('rootCause')
+                          setSortDirection('asc')
+                        }
+                      }}
+                      className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400 cursor-pointer select-none"
+                    >
+                      Root Cause {sortField === 'rootCause' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
+                    <th
+                      onClick={() => {
+                        if (sortField === 'status') setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        else {
+                          setSortField('status')
+                          setSortDirection('asc')
+                        }
+                      }}
+                      className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400 cursor-pointer select-none"
+                    >
+                      Status {sortField === 'status' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
+                    <th
+                      onClick={() => {
+                        if (sortField === 'errorCode') setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        else {
+                          setSortField('errorCode')
+                          setSortDirection('asc')
+                        }
+                      }}
+                      className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400 cursor-pointer select-none"
+                    >
+                      Error Code {sortField === 'errorCode' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
+                    <th
+                      onClick={() => {
+                        if (sortField === 'interventions') setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        else {
+                          setSortField('interventions')
+                          setSortDirection('asc')
+                        }
+                      }}
+                      className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400 cursor-pointer select-none"
+                    >
+                      Interventions {sortField === 'interventions' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
+                    <th
+                      onClick={() => {
+                        if (sortField === 'createdAt') setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        else {
+                          setSortField('createdAt')
+                          setSortDirection('desc')
+                        }
+                      }}
+                      className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400 cursor-pointer select-none"
+                    >
+                      Created At {sortField === 'createdAt' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                    </th>
+                  </tr>
             </thead>
             <tbody>
               {loading ? (
                 <SkeletonRows />
               ) : (
-                events.map((event) => (
-                  <tr
-                    key={event.id}
-                    onClick={() => navigate(`/events/${event.id}`)}
-                    className="cursor-pointer border-b border-[#1a2540] transition-colors hover:bg-[#111d35] last:border-b-0"
-                  >
-                    <td className="px-4 py-3 text-sm text-slate-200">
-                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${typeBadgeColors[event.type] ?? 'border-slate-700 bg-slate-900/80 text-slate-200'}`}>
-                        {event.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-200">
-                      ₹{(event.amount / 100).toLocaleString('en-IN')}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-200">
-                      <span title={event.rootCause ?? 'Unknown'}>
-                        {(event.rootCause ?? 'Unknown').length > 24
-                          ? `${(event.rootCause ?? 'Unknown').slice(0, 24)}…`
-                          : (event.rootCause ?? 'Unknown')}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-200">
-                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${statusBadgeColors[event.status] ?? 'border-slate-700 bg-slate-900/80 text-slate-200'}`}>
-                        {event.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-200">{event.errorCode ?? '—'}</td>
-                    <td className="px-4 py-3 text-sm text-slate-200">{event._count?.interventions ?? 0}</td>
-                    <td className="px-4 py-3 text-sm text-slate-200">
-                      {formatRelativeTime(event.createdAt)}
-                    </td>
-                  </tr>
-                ))
+                (() => {
+                  const sorted = [...events].sort((a, b) => {
+                    const dir = sortDirection === 'asc' ? 1 : -1
+
+                    function str(v: any) {
+                      if (v == null) return ''
+                      return String(v)
+                    }
+
+                    switch (sortField) {
+                      case 'amount':
+                        return dir * ((a.amount ?? 0) - (b.amount ?? 0))
+                      case 'createdAt':
+                        return dir * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                      case 'type':
+                        return dir * str(a.type).localeCompare(str(b.type))
+                      case 'status':
+                        return dir * str(a.status).localeCompare(str(b.status))
+                      case 'errorCode':
+                        return dir * str(a.errorCode).localeCompare(str(b.errorCode))
+                      case 'rootCause':
+                        return dir * str(a.rootCause).localeCompare(str(b.rootCause))
+                      case 'interventions':
+                        return dir * ((a._count?.interventions ?? 0) - (b._count?.interventions ?? 0))
+                      default:
+                        return 0
+                    }
+                  })
+
+                  return sorted.map((event) => (
+                    <tr
+                      key={event.id}
+                      onClick={() => navigate(`/events/${event.id}`)}
+                      className="cursor-pointer border-b border-[#1a2540] transition-colors hover:bg-[#111d35] last:border-b-0"
+                    >
+                      <td className="px-4 py-3 text-sm text-slate-200">
+                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${typeBadgeColors[event.type] ?? 'border-slate-700 bg-slate-900/80 text-slate-200'}`}>
+                          {event.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-200">
+                        ₹{(event.amount / 100).toLocaleString('en-IN')}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-200">
+                        <span title={event.rootCause ?? 'Unknown'}>
+                          {(event.rootCause ?? 'Unknown').length > 24
+                            ? `${(event.rootCause ?? 'Unknown').slice(0, 24)}…`
+                            : (event.rootCause ?? 'Unknown')}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-200">
+                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${statusBadgeColors[event.status] ?? 'border-slate-700 bg-slate-900/80 text-slate-200'}`}>
+                          {event.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-200">{event.errorCode ?? '—'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-200">{event._count?.interventions ?? 0}</td>
+                      <td className="px-4 py-3 text-sm text-slate-200">
+                        {formatRelativeTime(event.createdAt)}
+                      </td>
+                    </tr>
+                  ))
+                })()
               )}
             </tbody>
           </table>

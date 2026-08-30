@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { LayoutDashboard, List, Play } from 'lucide-react'
 import { motion } from 'motion/react'
+import { useBatch } from '../context/BatchContext'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -9,6 +10,8 @@ const navItems = [
 ]
 
 export default function Layout() {
+  const { state } = useBatch()
+
   return (
     <div className="flex min-h-screen bg-[#0a0f1a] text-slate-100">
       <aside className="flex w-[240px] shrink-0 flex-col border-r border-[#1a2540] bg-[#0d1424] px-4 py-5">
@@ -35,7 +38,12 @@ export default function Layout() {
                   }`}
                 >
                   <Icon className={isActive ? 'h-4 w-4 text-sky-300' : 'h-4 w-4 text-slate-400'} />
-                  <span>{label}</span>
+                  <span className="flex items-center gap-2">
+                    <span>{label}</span>
+                    {label === 'Batch Runner' && state.isRunning && (
+                      <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                    )}
+                  </span>
                 </motion.div>
               )}
             </NavLink>

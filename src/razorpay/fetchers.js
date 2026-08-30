@@ -26,7 +26,10 @@ async function fetchAbandonedOrders() {
   })
 
   return (response.items || []).filter(o =>
-    o.status === 'created' && o.attempts === 0
+    o.status === 'created' &&
+    o.attempts === 0 &&
+    !o.receipt?.startsWith('recover_') &&
+    !o.receipt?.startsWith('retry_')
   )
 }
 

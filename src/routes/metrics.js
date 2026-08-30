@@ -61,7 +61,7 @@ export async function loadMetricsData() {
     prisma.event.groupBy({
       by: ['rootCause'],
       where: { rootCause: { not: null } },
-      _count: { _all: true },
+      _count: { rootCause: true },
       orderBy: { _count: { rootCause: 'desc' } },
       take: 5,
     }),

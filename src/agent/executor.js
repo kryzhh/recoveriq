@@ -8,42 +8,50 @@ import razorpay from '../razorpay/client.js'
 // ----------------------------------------------------------
 
 async function executePaymentLink(event, intervention) {
-  const order = await razorpay.orders.create({
-    amount: event.amount,
-    currency: event.currency,
-    receipt: `recover_${event.id.slice(0, 8)}`,
-  })
-
-  const paymentLink = await razorpay.paymentLink.create({
-    amount: event.amount,
-    currency: event.currency,
-    description: `Recovery payment for order ${event.razorpayId}`,
-    reminder_enable: true,
-    notify: { sms: false, email: false }, // test mode — no real notifications
-    notes: {
-      recoveriq_event_id: event.id,
-      recoveriq_intervention_id: intervention.id,
-      original_razorpay_id: event.razorpayId,
-    },
-  })
-
-  return {
-    executionPayload: {
-      paymentLinkId: paymentLink.id,
-      paymentLinkUrl: paymentLink.short_url,
-      orderId: order.id,
+  await new Promise(resolve => setTimeout(resolve, 3000))
+  try{
+    const order = await razorpay.orders.create({
       amount: event.amount,
-    },
-    reversalPayload: {
-      action: 'cancel_payment_link',
-      paymentLinkId: paymentLink.id,
-    },
+      currency: event.currency,
+      receipt: `recover_${event.id.slice(0, 8)}`,
+    })
+
+    const paymentLink = await razorpay.paymentLink.create({
+      amount: event.amount,
+      currency: event.currency,
+      description: `Recovery payment for order ${event.razorpayId}`,
+      reminder_enable: true,
+      notify: { sms: false, email: false }, // test mode — no real notifications
+      notes: {
+        recoveriq_event_id: event.id,
+        recoveriq_intervention_id: intervention.id,
+        original_razorpay_id: event.razorpayId,
+      },
+    })
+
+    return {
+      executionPayload: {
+        paymentLinkId: paymentLink.id,
+        paymentLinkUrl: paymentLink.short_url,
+        orderId: order.id,
+        amount: event.amount,
+      },
+      reversalPayload: {
+        action: 'cancel_payment_link',
+        paymentLinkId: paymentLink.id,
+      },
+    }
+  } catch (err) {
+    console.error('[Executor] Raw error:', err)
+    console.error('[Executor] Error message:', err?.message)
+    console.error('[Executor] Error description:', err?.error?.description)
   }
 }
 
 async function executeRetry(event, intervention) {
   // In test mode there's no direct "retry payment" API —
   // we create a fresh order as a retry signal
+  await new Promise(resolve => setTimeout(resolve, 3000))
   const order = await razorpay.orders.create({
     amount: event.amount,
     currency: event.currency,

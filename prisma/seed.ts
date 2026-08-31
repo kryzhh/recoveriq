@@ -328,12 +328,12 @@ async function main() {
   }
 
   // 12 ORDER_ABANDONED
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 6; i++) {
     events.push(createOrderAbandonedEvent())
   }
 
   // 8 MANDATE_FAILED
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 2; i++) {
     events.push(createMandateFailedEvent())
   }
 
